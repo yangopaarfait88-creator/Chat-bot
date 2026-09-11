@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doktè Bot — Maquette WhatsApp</title>
+<style>
+  :root{
+    --wa-dark: #0b4f3f;
+    --wa-mid: #128c5e;
+    --wa-bright: #25b06a;
+    --wa-pale: #eaf7ef;
+    --wa-wallpaper: #e7f3ea;
+    --paper: #ffffff;
+    --ink: #12251c;
+    --ink-soft: #4b5f54;
+    --line: #cfe6d8;
+    --bubble-bot: #ffffff;
+    --bubble-user: #d6f3df;
+    --danger: #b3412b;
+    --danger-bg: #fdece7;
+    --shadow: 0 18px 40px rgba(11,79,63,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background: #f2f5f2;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+  }
+  .stage{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 28px 12px;
+  }
+  .phone{
+    width: 380px;
+    max-width: 100%;
+    height: 760px;
+    background: var(--wa-wallpaper);
+    border-radius: 34px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    border: 8px solid #0e2b21;
+  }
+  .notch{
+    position:absolute;
+    top:8px; left:50%; transform:translateX(-50%);
+    width:120px; height:18px;
+    background:#0e2b21;
+    border-radius: 0 0 14px 14px;
+    z-index:5;
+  }
+
+  /* ---------- HEADER ---------- */
+  .app-header{
+    background: var(--wa-dark);
+    color:#fff;
+    padding: 30px 14px 12px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-shrink:0;
+  }
+  .logo{
+    width:42px;height:42px;border-radius:50%;
+    background:#ffffff;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .header-text{flex:1; min-width:0;}
+  .header-text .name{
+    font-size:17px;
+    font-weight:700;
+    line-height:1.2;
+  }
+  .header-text .status{
+    font-size:12px;
+    color:#cfe9dd;
+  }
+  .header-icon-btn{
+    width:38px;height:38px;
+    border-radius:50%;
+    border:none;
+    background:rgba(255,255,255,0.14);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .header-icon-btn:active{ background:rgba(255,255,255,0.28); }
+
+  /* ---------- SCREENS ---------- */
+  .screen{
+    flex:1;
+    min-height:0;
+    display:none;
+    flex-direction:column;
+  }
+  .screen.active{ display:flex; }
+
+  /* ---------- CHAT SCREEN ---------- */
+  #chatBody{
+    flex:1;
+    overflow-y:auto;
+    padding: 14px 12px 8px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .bubble-row{ display:flex; }
+  .bubble-row.bot{ justify-content:flex-start; }
+  .bubble-row.user{ justify-content:flex-end; }
+  .bubble{
+    max-width: 80%;
+    padding: 10px 13px;
+    font-size: 15.5px;
+    line-height:1.42;
+    border-radius: 14px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+  }
+  .bubble.bot{
+    background: var(--bubble-bot);
+    border-top-left-radius:3px;
+    color: var(--ink);
+  }
+  .bubble.user{
+    background: var(--bubble-user);
+    border-top-right-radius:3px;
+    color: var(--ink);
+  }
+  .bubble .time{
+    display:block;
+    text-align:right;
+    font-size:10.5px;
+    color:#8a9a90;
+    margin-top:4px;
+  }
+  .tips-list{
+    margin: 6px 0 0 0;
+    padding-left: 18px;
+  }
+  .tips-list li{ margin-bottom:4px; }
+  .alert-line{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-radius:10px;
+    padding:8px 10px;
+    margin-top:8px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .disclaimer{
+    font-size:12.5px;
+    color: var(--ink-soft);
+    text-align:center;
+    padding: 6px 20px 2px 20px;
+  }
+
+  .chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding: 4px 4px 2px 4px;
+  }
+  .chip{
+    border: 1.6px solid var(--wa-mid);
+    color: var(--wa-mid);
+    background:#fff;
+    border-radius: 20px;
+    padding: 9px 14px;
+    font-size: 14.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .chip:active{ background: var(--wa-pale); }
+
+  .input-bar{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px;
+    background: #f7fbf8;
+    border-top: 1px solid var(--line);
+  }
+  .input-fake{
+    flex:1;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding: 11px 16px;
+    font-size:14.5px;
+    color:#8a9a90;
+  }
+  .send-btn{
+    width:42px;height:42px;border-radius:50%;
+    background: var(--wa-mid);
+    border:none;color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+
+  /* ---------- MENU SCREEN ---------- */
+  #menuBody{
+    flex:1;
+    overflow-y:auto;
+    padding: 18px 16px 16px 16px;
+  }
+  .menu-title{
+    font-size:15px;
+    font-weight:700;
+    color: var(--wa-dark);
+    margin: 4px 0 12px 2px;
+  }
+  .menu-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .menu-btn{
+    background:#fff;
+    border: 1.6px solid var(--line);
+    border-radius:18px;
+    padding: 20px 10px 16px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    text-align:center;
+  }
+  .menu-btn:active{ background: var(--wa-pale); }
+  .menu-btn .icon-wrap{
+    width:52px;height:52px;
+    border-radius:50%;
+    background: var(--wa-pale);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .menu-btn.urgences .icon-wrap{ background: var(--danger-bg); }
+  .menu-btn .label{
+    font-size:15px;
+    font-weight:700;
+    color: var(--ink);
+    line-height:1.25;
+  }
+  .menu-btn.urgences .label{ color: var(--danger); }
+  .menu-btn .sub{
+    font-size:11.5px;
+    color: var(--ink-soft);
+  }
+
+  .menu-note{
+    margin-top:18px;
+    background: var(--wa-pale);
+    border-radius:14px;
+    padding: 14px;
+    font-size:13.5px;
+    color: var(--ink-soft);
+    line-height:1.5;
+  }
+
+  /* bottom tab bar */
+  .tabbar{
+    flex-shrink:0;
+    display:flex;
+    border-top: 1px solid var(--line);
+    background:#fff;
+  }
+  .tab{
+    flex:1;
+    border:none;
+    background:none;
+    padding: 9px 4px calc(9px + env(safe-area-inset-bottom)) 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    font-size:11.5px;
+    font-weight:600;
+    color: var(--ink-soft);
+    cursor:pointer;
+  }
+  .tab.active{ color: var(--wa-mid); }
+
+  .credit{
+    text-align:center;
+    font-size:12px;
+    color:#8a9a90;
+    margin-top:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div>
+    <div class="phone">
+      <div class="notch"></div>
+
+      <!-- HEADER (shared) -->
+      <div class="app-header">
+        <div class="logo">
+          <svg width="26" height="26" viewBox="0 0 48 48">
+            <rect x="19" y="6" width="10" height="36" rx="2" fill="#1d9e63"/>
+            <rect x="6" y="19" width="36" height="10" rx="2" fill="#1d9e63"/>
+            <circle cx="24" cy="24" r="5.5" fill="#ffffff" stroke="#0b4f3f" stroke-width="1.5"/>
+            <path d="M15 33 q0 6 6 6 q6 0 6 -6" fill="none" stroke="#0b4f3f" stroke-width="2.4" stroke-linecap="round"/>
+            <circle cx="15" cy="33" r="2.4" fill="#0b4f3f"/>
+          </svg>
+        </div>
+        <div class="header-text">
+          <div class="name" id="headerName">Doktè Bot</div>
+          <div class="status" id="headerStatus">En ligne · réponses automatiques</div>
+        </div>
+        <button class="header-icon-btn" id="menuToggleBtn" title="Menu" aria-label="Ouvrir le menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- ============ ECRAN 1 : CHAT ============ -->
+      <div class="screen active" id="screenChat">
+        <div class="disclaimer" id="disclaimerTxt">
+          Doktè Bot donne des conseils simples. Il ne remplace pas un médecin.
+        </div>
+        <div id="chatBody"></div>
+
+        <div id="chipsZone" class="chip-row"></div>
+
+        <div class="input-bar">
+          <div class="input-fake" id="inputPlaceholder">Écris ton message…</div>
+          <button class="send-btn" aria-label="Envoyer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 20l18-8L3 4v6l12 2-12 2v6z" fill="#fff"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ============ ECRAN 2 : MENU ============ -->
+      <div class="screen" id="screenMenu">
+        <div id="menuBody">
+          <div class="menu-title" id="menuTitleTxt">Que veux-tu faire ?</div>
+          <div class="menu-grid">
+
+            <div class="menu-btn" data-action="symptomes">
+              <div class="icon-wrap">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-9.5-9.1C1.2 8.6 3 5.5 6.2 5.1c1.9-.2 3.4.8 4.8 2.4C12.4 5.9 13.9 4.9 15.8 5.1c3.2.4 5 3.5 3.7 6.8C17.5 16.4 12 21 12 21z" stroke="#128c5e" stroke-width="1.8"/></svg>
+              </div>
+              <div class="label" id="btnSymptomesLabel">Symptômes</div>
+              <div class="sub" id="btnSymptomesSub">Décris ce que tu ressens</div>
+            </div>
+
+            <div class="menu-btn" data-action="centres">
+              <div class="icon-wrap">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7v13h6v-6h6v6h6V7l-9-5z" stroke="#128c5e" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="label" id="btnCentresLabel">Centres de Santé</div>
+              <div class="sub" id="btnCentresSub">Trouver un centre près de toi</div>
+            </div>
+
+            <div class="menu-btn urgences" data-action="urgences">
+              <div class="icon-wrap">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2v6M12 16v6M2 12h6M16 12h6" stroke="#b3412b" stroke-width="2.4" stroke-linecap="round"/></svg>
+              </div>
+              <div class="label" id="btnUrgencesLabel">Urgences</div>
+              <div class="sub" id="btnUrgencesSub">Danger immédiat</div>
+            </div>
+
+            <div class="menu-btn" data-action="sango">
+              <div class="icon-wrap">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.5 8.5 0 1 1-4.1-7.3L21 3l-1.2 4.1a8.4 8.4 0 0 1 1.2 4.4z" stroke="#128c5e" stroke-width="1.8"/></svg>
+              </div>
+              <div class="label" id="btnSangoLabel">Parler en Sango</div>
+              <div class="sub" id="btnSangoSub">Changer la langue</div>
+            </div>
+
+          </div>
+
+          <div class="menu-note" id="menuNoteTxt">
+            Doktè Bot t'aide à comprendre tes symptômes et te dit quand aller au centre de santé. En cas de danger, va tout de suite au centre le plus proche.
+          </div>
+        </div>
+
+        <div class="tabbar">
+          <button class="tab" id="tabChat">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v12H8l-4 4V4z" stroke="currentColor" stroke-width="1.8"/></svg>
+            <span id="tabChatLabel">Discussion</span>
+          </button>
+          <button class="tab active" id="tabMenu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="tabMenuLabel">Menu</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="credit">Maquette Doktè Bot — Français / Sango</div>
+  </div>
+</div>
+
+<script>
+/* ---------------- TEXTES BILINGUES ---------------- */
+const T = {
+  fr: {
+    status: "En ligne · réponses automatiques",
+    disclaimer: "Doktè Bot donne des conseils simples. Il ne remplace pas un médecin.",
+    inputPlaceholder: "Écris ton message…",
+    menuTitle: "Que veux-tu faire ?",
+    btnSymptomes: ["Symptômes", "Décris ce que tu ressens"],
+    btnCentres: ["Centres de Santé", "Trouver un centre près de toi"],
+    btnUrgences: ["Urgences", "Danger immédiat"],
+    btnSango: ["Parler en Français", "Changer la langue"],
+    menuNote: "Doktè Bot t'aide à comprendre tes symptômes et te dit quand aller au centre de santé. En cas de danger, va tout de suite au centre le plus proche.",
+    tabChat: "Discussion",
+    tabMenu: "Menu",
+    welcome: "Bonjour ! Je suis Doktè Bot. Je ne remplace pas un médecin. Décris-moi ton problème.",
+    chipsStart: ["J'ai mal à la tête", "Mon bébé a la diarrhée", "Voir le menu"],
+    headache: {
+      user: "J'ai mal à la tête",
+      question: "D'accord. Depuis combien de temps as-tu mal à la tête ?",
+      chips: ["Depuis aujourd'hui", "Depuis plusieurs jours"],
+      tips: [
+        "Repose-toi dans un endroit calme et pas trop éclairé.",
+        "Bois beaucoup d'eau pendant la journée.",
+        "Évite le soleil direct et le bruit fort."
+      ],
+      alert: "Si la douleur est très forte, ou dure plus de 3 jours, va au centre de santé le plus proche.",
+      closing: "Va au centre de santé le plus proche si ça ne s'améliore pas."
+    },
+    diarrhea: {
+      user: "Mon bébé a la diarrhée",
+      question: "Je comprends ton inquiétude. Depuis combien de temps le bébé a-t-il la diarrhée ?",
+      chips: ["Depuis aujourd'hui", "Depuis 2 jours ou plus"],
+      tips: [
+        "Continue à allaiter ou à nourrir le bébé normalement.",
+        "Donne une solution de réhydratation orale (SRO) souvent, en petites quantités.",
+        "Lave-toi bien les mains avant et après avoir touché le bébé."
+      ],
+      alert: "Si tu vois du sang dans les selles, de la fièvre, ou si le bébé refuse de boire : va au centre de santé le plus proche maintenant.",
+      closing: "Va au centre de santé le plus proche si ça ne s'améliore pas."
+    },
+    genericAck: "Merci, j'ai noté.",
+    goToMenu: "Voici le menu principal.",
+    justNow: "maintenant"
+  },
+  sg: {
+    status: "A yeke na ligne · akiringo ye oko oko",
+    disclaimer: "Doktè Bot amû gï wango. Lo yeke doctor pëpe.",
+    inputPlaceholder: "Sû tënë ti mo dä…",
+    menuTitle: "Mo ye sara nyen ?",
+    btnSymptomes: ["Akpälë", "Fâ ye so mo yeke ni na terê"],
+    btnCentres: ["Yando ti nzoni-dutï", "Wara yando so ayeke ndulu na mo"],
+    btnUrgences: ["Kpälë ni hîo hîo", "Kpälë ni ayeke fadeso"],
+    btnSango: ["Sara na Français", "Changé yanga"],
+    menuNote: "Doktè Bot amû mo maboko ti hinga akpälë ti mo, na atene mo na ndö ti ngoi so mo yeke gue na yando ti nzoni-dutï. Tongana kpälë ni ayeke ngangü, gue hîo na yando ti nzoni-dutï so ayeke ndulu na mo.",
+    tabChat: "Lisoro",
+    tabMenu: "Menu",
+    welcome: "Balao ! Mbï yeke Doktè Bot. Mbï yeke doctor pëpe. Fâ na mbï kpälë ti mo.",
+    chipsStart: ["Li ti mbï asara mbï ngangü", "Molenge ti mbï ayeke sïgïgî", "Bâ menu"],
+    headache: {
+      user: "Li ti mbï asara mbï ngangü",
+      question: "Nzoni. A yeke tongo woni ngoi so li ti mo asara mo ?",
+      chips: ["A londo lâsô", "A londo na ambeni lâ"],
+      tips: [
+        "Wu terê ti mo na ndo so alï dï, na lê ti kpälë pëpe.",
+        "Nyon ngu mingi na ngoi ti lâ.",
+        "Kpe lâ so azû ngangü na yowo so agä ngangü."
+      ],
+      alert: "Tongana kpälë ni ayeke ngangü mingi, wala a sara ahon lâ ota, gue na yando ti nzoni-dutï so ayeke ndulu na mo.",
+      closing: "Gue na yando ti nzoni-dutï so ayeke ndulu na mo tongana ye ayeke gä nzoni pëpe."
+    },
+    diarrhea: {
+      user: "Molenge ti mbï ayeke sïgïgî",
+      question: "Mbï hinga so bê ti mo asara mo ngangü. A yeke tongo woni ngoi so molenge ni ayeke sïgïgî ?",
+      chips: ["A londo lâsô", "A londo alâ use wala ahon"],
+      tips: [
+        "Ngbâ ti mû mabôko na molenge, wala ti mû kobe na lo tongana ti kozo.",
+        "Mû na lo ngu ti SRO mingi ngoi na ngoi, na akete kete.",
+        "Sukûla maboko ti mo nzoni na tïtî na pekô ti dutï na molenge."
+      ],
+      alert: "Tongana mo bâ mênë na sïgïgî ni, wala molenge ayeke na feto, wala ake ti nyon ngu : gue hîo na yando ti nzoni-dutï so ayeke ndulu na mo.",
+      closing: "Gue na yando ti nzoni-dutï so ayeke ndulu na mo tongana ye ayeke gä nzoni pëpe."
+    },
+    genericAck: "Merci, mbï mä.",
+    goToMenu: "Menu ti kozo, so ayeke.",
+    justNow: "fadeso"
+  }
+};
+
+let lang = "fr";
+
+const els = {
+  headerStatus: document.getElementById("headerStatus"),
+  disclaimerTxt: document.getElementById("disclaimerTxt"),
+  inputPlaceholder: document.getElementById("inputPlaceholder"),
+  menuTitleTxt: document.getElementById("menuTitleTxt"),
+  menuNoteTxt: document.getElementById("menuNoteTxt"),
+  btnSymptomesLabel: document.getElementById("btnSymptomesLabel"),
+  btnSymptomesSub: document.getElementById("btnSymptomesSub"),
+  btnCentresLabel: document.getElementById("btnCentresLabel"),
+  btnCentresSub: document.getElementById("btnCentresSub"),
+  btnUrgencesLabel: document.getElementById("btnUrgencesLabel"),
+  btnUrgencesSub: document.getElementById("btnUrgencesSub"),
+  btnSangoLabel: document.getElementById("btnSangoLabel"),
+  btnSangoSub: document.getElementById("btnSangoSub"),
+  tabChatLabel: document.getElementById("tabChatLabel"),
+  tabMenuLabel: document.getElementById("tabMenuLabel"),
+  chatBody: document.getElementById("chatBody"),
+  chipsZone: document.getElementById("chipsZone"),
+  screenChat: document.getElementById("screenChat"),
+  screenMenu: document.getElementById("screenMenu"),
+  tabChat: document.getElementById("tabChat"),
+  tabMenu: document.getElementById("tabMenu"),
+  menuToggleBtn: document.getElementById("menuToggleBtn"),
+};
+
+function applyStaticTexts(){
+  const t = T[lang];
+  els.headerStatus.textContent = t.status;
+  els.disclaimerTxt.textContent = t.disclaimer;
+  els.inputPlaceholder.textContent = t.inputPlaceholder;
+  els.menuTitleTxt.textContent = t.menuTitle;
+  els.menuNoteTxt.textContent = t.menuNote;
+  els.btnSymptomesLabel.textContent = t.btnSymptomes[0];
+  els.btnSymptomesSub.textContent = t.btnSymptomes[1];
+  els.btnCentresLabel.textContent = t.btnCentres[0];
+  els.btnCentresSub.textContent = t.btnCentres[1];
+  els.btnUrgencesLabel.textContent = t.btnUrgences[0];
+  els.btnUrgencesSub.textContent = t.btnUrgences[1];
+  els.btnSangoLabel.textContent = t.btnSango[0];
+  els.btnSangoSub.textContent = t.btnSango[1];
+  els.tabChatLabel.textContent = t.tabChat;
+  els.tabMenuLabel.textContent = t.tabMenu;
+}
+
+function now(){
+  const t = T[lang];
+  return t.justNow;
+}
+
+function addBubble(text, who, extraHtml){
+  const row = document.createElement("div");
+  row.className = "bubble-row " + who;
+  const b = document.createElement("div");
+  b.className = "bubble " + who;
+  b.innerHTML = text + (extraHtml || "") + '<span class="time">'+now()+'</span>';
+  row.appendChild(b);
+  els.chatBody.appendChild(row);
+  els.chatBody.scrollTop = els.chatBody.scrollHeight;
+}
+
+function setChips(list){
+  els.chipsZone.innerHTML = "";
+  list.forEach(label=>{
+    const c = document.createElement("button");
+    c.className = "chip";
+    c.textContent = label;
+    c.onclick = () => handleChip(label);
+    els.chipsZone.appendChild(c);
+  });
+}
+
+function clearChat(){
+  els.chatBody.innerHTML = "";
+}
+
+function startConversation(){
+  clearChat();
+  const t = T[lang];
+  addBubble(t.welcome, "bot");
+  setChips(t.chipsStart);
+}
+
+function tipsToHtml(tips, alertText){
+  let html = '<ul class="tips-list">' + tips.map(x=>'<li>'+x+'</li>').join("") + "</ul>";
+  html += '<div class="alert-line">⚠ ' + alertText + "</div>";
+  return html;
+}
+
+function handleChip(label){
+  const t = T[lang];
+
+  if(label === t.chipsStart[2]){ // "Voir le menu" / "Bâ menu"
+    goToMenu();
+    return;
+  }
+
+  // headache flow
+  if(label === t.chipsStart[0] || label === t.headache.chips[0] || label === t.headache.chips[1]){
+    if(label === t.chipsStart[0]){
+      addBubble(t.headache.user, "user");
+      setChips([]);
+      setTimeout(()=>{
+        addBubble(t.headache.question, "bot");
+        setChips(t.headache.chips);
+      }, 500);
+    } else {
+      addBubble(label, "user");
+      setChips([]);
+      setTimeout(()=>{
+        addBubble(t.genericAck + " " + t.headache.closing, "bot", tipsToHtml(t.headache.tips, t.headache.alert));
+        setChips(t.chipsStart);
+      }, 500);
+    }
+    return;
+  }
+
+  // diarrhea flow
+  if(label === t.chipsStart[1] || label === t.diarrhea.chips[0] || label === t.diarrhea.chips[1]){
+    if(label === t.chipsStart[1]){
+      addBubble(t.diarrhea.user, "user");
+      setChips([]);
+      setTimeout(()=>{
+        addBubble(t.diarrhea.question, "bot");
+        setChips(t.diarrhea.chips);
+      }, 500);
+    } else {
+      addBubble(label, "user");
+      setChips([]);
+      setTimeout(()=>{
+        addBubble(t.genericAck + " " + t.diarrhea.closing, "bot", tipsToHtml(t.diarrhea.tips, t.diarrhea.alert));
+        setChips(t.chipsStart);
+      }, 500);
+    }
+    return;
+  }
+}
+
+function goToMenu(){
+  els.screenChat.classList.remove("active");
+  els.screenMenu.classList.add("active");
+  els.tabChat.classList.remove("active");
+  els.tabMenu.classList.add("active");
+}
+function goToChat(){
+  els.screenMenu.classList.remove("active");
+  els.screenChat.classList.add("active");
+  els.tabMenu.classList.remove("active");
+  els.tabChat.classList.add("active");
+}
+
+els.menuToggleBtn.onclick = goToMenu;
+els.tabMenu.onclick = goToMenu;
+els.tabChat.onclick = goToChat;
+
+document.querySelectorAll(".menu-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const action = btn.getAttribute("data-action");
+    if(action === "sango"){
+      lang = (lang === "fr") ? "sg" : "fr";
+      applyStaticTexts();
+      startConversation();
+      goToChat();
+      return;
+    }
+    // Symptômes / Centres / Urgences -> retourne au chat pour illustrer la suite du parcours
+    goToChat();
+  });
+});
+
+applyStaticTexts();
+startConversation();
+</script>
+</body>
+</html>
